@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+group = 'de.stylabs'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation("com.github.twitch4j:twitch4j:1.23.0")
+    implementation('ch.qos.logback:logback-classic:1.5.15')
+    implementation('org.json:json:20240303')
+    compileOnly("jakarta.websocket:jakarta.websocket-api:2.0.0")
+    implementation("org.apache.tomcat.embed:tomcat-embed-core:11.0.2")
+    implementation("org.apache.tomcat.embed:tomcat-embed-websocket:11.0.2")
+    implementation("org.apache.tomcat.embed:tomcat-embed-jasper:11.0.2")
+
+}
+
+test {
+    useJUnitPlatform()
+}

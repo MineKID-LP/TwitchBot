@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: "Poppins", serif;
+            font-weight: 500;
+            font-style: normal;
+            color: white;
+            height: 100%;
+        }
+
+        #background {
+            background-color: #000000a1;
+            min-width: calc(50% + 20px);
+            min-height: calc(100% + 4px);
+            position: absolute;
+            margin: 0;
+            padding: 0;
+            border-radius: 10px;
+            margin-top: -20px;
+            margin-left: -20px;
+            z-index: 0;
+        }
+
+        #container {
+            min-width: 50%;
+            min-height: 100%;
+            max-width: 50%;
+            max-height: 100%;
+        }
+
+        .chatFadeOut {
+            animation: fadeOut 0.5s forwards;
+        }
+
+        .chatFadeIn {
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .emote {
+            margin-top: 0px;
+            position: absolute;
+            width: 23px;
+            height: 23px;
+            min-height: 23px;
+            min-width: 23px;
+            z-index: 10;
+        }
+
+        .emote-spacer {
+            width: 23px;
+            height: 23px;
+            min-height: 23px;
+            min-width: 23px;
+        }
+
+        .text {
+            line-height: 23px;
+            z-index: 10;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+                margin-left: -500px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                margin-left: -500px;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        li {
+            list-style-type: none;
+            max-height: 23px;
+            line-height: 23px;
+            display: flex;
+            overflow: hidden;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="background"></div>
+    <div id="container">
+        <ul id="chat"></ul>
+    </div>
+</body>
+
+<script>
+    let MAX_MESSAGES = 38;
+    let MAX_STAY_TIME = 20000;
+    let messages = [];
+    let emotes = {};
+    let lastMessageId = 0;
+    const chat = document.getElementById('chat');
+
+    function appendMessage(username, color, message, emotes) {
+        const li = document.createElement('li')
+        const name = document.createElement('span')
+        name.innerText = username
+        name.style.color = color
+        name.classList.add('text')
+
+        const seperator = document.createElement('span')
+        seperator.innerText = ':'
+        seperator.style.paddingRight = '4px'
+        seperator.classList.add('text')
+
+        li.appendChild(name)
+        li.appendChild(seperator)
+
+        renderText(message, li, emotes)
+
+        li.classList.add('message')
+        li.classList.add('chatFadeIn')
+
+        setTimeout(() => {
+            li.classList.remove('chatFadeIn')
+        }, 400)
+
+        chat.appendChild(li)
+        messages.push({ message, time: new Date(), element: li })
+
+        if (messages.length > MAX_MESSAGES) {
+            let child = messages.shift()
+            child.element.classList.add('chatFadeOut')
+            setTimeout(() => {
+                child.element.remove()
+            }, 400)
+        }
+    }
+
+    function renderText(message, element, emotes = "") {
+        //1441271:0-5/305954156:7-14
+        //305954156:0-7,19-26/emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7:9-17
+
+        if (emotes === "") {
+            let text = document.createElement('span');
+            text.innerText = message;
+            text.classList.add('text');
+            element.appendChild(text);
+            return;
+        }
+
+        emotes = emotes.split('/');
+        let emote = [];
+        for (let i = 0; i < emotes.length; i++) {
+            let [id, positions] = emotes[i].split(':');
+            positions = positions.split(',');
+            for (let j = 0; j < positions.length; j++) {
+                let [start, end] = positions[j].split('-');
+                emote.push({ id, start, end });
+            }
+        }
+
+        emote.sort((a, b) => a.start - b.start);
+
+        let currentIndex = 0;
+        for (let i = 0; i < emote.length; i++) {
+            let { start, end } = emote[i];
+            start = parseInt(start);
+            end = parseInt(end) + 1; // Adjust end to be exclusive
+
+            // Add text before the emote
+            if (currentIndex < start) {
+                let text = document.createElement('span');
+                text.innerText = message.slice(currentIndex, start);
+                text.classList.add('text');
+                element.appendChild(text);
+            }
+
+            // Add the emote
+            let spacer = document.createElement('div');
+            spacer.classList.add('emote-spacer');
+            let img = document.createElement('img');
+            img.src = `https://static-cdn.jtvnw.net/emoticons/v2/${emote[i].id}/default/dark/1.0`;
+            img.classList.add('emote');
+            spacer.appendChild(img);
+            element.appendChild(spacer);
+
+            currentIndex = end;
+        }
+
+        // Add remaining text after the last emote
+        if (currentIndex < message.length) {
+            let text = document.createElement('span');
+            text.innerText = message.slice(currentIndex);
+            text.classList.add('text');
+            element.appendChild(text);
+        }
+
+    }
+
+    function startWebsocket() {
+        websocket = new WebSocket('ws://localhost:8080/ws');
+        websocket.onopen = function () {
+            console.log('Connected to server');
+        }
+
+        websocket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (data.overlay === 'chat') {
+                appendMessage(data.sender, data.color, data.message, data.emotes);
+            }
+        }
+    }
+
+    function cleanUpOldMessages() {
+        const now = new Date()
+        messages = messages.filter(message => {
+            if (now - message.time >= MAX_STAY_TIME) {
+                message.element.classList.add('chatFadeOut')
+                setTimeout(() => {
+                    message.element.remove()
+                }, 400)
+            }
+            return now - message.time < MAX_STAY_TIME
+        })
+
+        if (messages.length > 0) {
+            document.getElementById('background').classList.add('chatFadeIn')
+            document.getElementById('background').classList.remove('chatFadeOut')
+        } else {
+            document.getElementById('background').classList.add('chatFadeOut')
+            document.getElementById('background').classList.remove('chatFadeIn')
+        }
+
+    }
+
+    window.onload = () => {
+        startWebsocket()
+        setInterval(cleanUpOldMessages, 10)
+    }
+</script>
+
+</html>

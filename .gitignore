@@ -45,3 +45,8 @@ bin/
 /overlays/
 /credentials/
 /tomcat.8080/
+/.idea/
+/.gradle/
+/gradle/
+gradlew
+gradlew.bat

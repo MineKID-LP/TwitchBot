@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Followers</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: "Poppins", serif;
+            font-weight: 500;
+            font-style: normal;
+            color: white;
+            height: 100%;
+        }
+
+        .wrapper {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+        }
+
+        .trapezoid {
+            border-top: 50px solid #00000060;
+            border-left: 45px solid transparent;
+            border-right: 45px solid transparent;
+            height: 0;
+            width: 60%;
+        }
+
+        .horizontal-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            padding-right: 40px;
+        }
+
+        .double-arrow {
+            width: 45%;
+            height: 20px;
+            background-color: #00000060;
+            position: relative;
+        }
+
+        .double-arrow:before,
+        .double-arrow:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            top: 0;
+        }
+
+        .double-arrow:before {
+            left: -10px;
+            border-width: 10px 10px 10px 0;
+            border-color: transparent #00000060 transparent transparent;
+        }
+
+        .double-arrow:after {
+            right: -10px;
+            border-width: 10px 0 10px 10px;
+            border-color: transparent transparent transparent #00000060;
+        }
+
+        #follwerDisplay {
+            line-height: 21px;
+            text-align: center;
+        }
+
+        .double-arrow-inside {
+            width: 45%;
+            height: 20px;
+            background-color: #FF57E0;
+            position: relative;
+        }
+
+        .double-arrow-inside:before,
+        .double-arrow-inside:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            top: 0;
+        }
+
+        .double-arrow-inside:before {
+            left: -10px;
+            border-width: 10px 10px 10px 0;
+            border-color: transparent #FF57E0 transparent transparent;
+        }
+
+        .double-arrow-inside:after {
+            right: -10px;
+            border-width: 10px 0 10px 10px;
+            border-color: transparent transparent transparent #FF57E0;
+        }
+
+        .FadeOut {
+            animation: fadeOut 0.5s forwards;
+        }
+
+        .FadeIn {
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+                margin-top: -100px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                margin-top: -100px;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="horizontal-center">
+            <div id="container-bg" class="trapezoid"></div>
+        </div>
+    </div>
+
+    <div class="wrapper">
+        <div id="container" class="horizontal-center">
+            <div class="title">Followers</div>
+            <div class="double-arrow">
+                <div class="double-arrow-inside">
+                    <div class="horizontal-center">
+                        <div id="follwerDisplay"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <canvas id="d"></canvas>
+    <script>
+        let startTime = new Date();
+        let currentUser;
+        const progress = document.querySelector('.double-arrow-inside');
+        const follwerDisplay = document.getElementById('follwerDisplay');
+        const ctx = document.getElementById('d').getContext('2d');
+        const shapes = {
+            circle: (x, y, size, color, rotation) => {
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            },
+
+            square: (x, y, size, color, rotation) => {
+                ctx.save();
+                ctx.fillStyle = color;
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.fillRect(-size / 2, -size / 2, size, size);
+                ctx.restore();
+            },
+
+            triangle: (x, y, size, color, rotation) => {
+                ctx.save();
+                ctx.fillStyle = color;
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.beginPath();
+                ctx.moveTo(0, -size / 2);
+                ctx.lineTo(-size / 2, size / 2);
+                ctx.lineTo(size / 2, size / 2);
+                ctx.fill();
+                ctx.restore();
+            },
+
+            star: (x, y, size, color, rotation) => {
+                ctx.save();
+                ctx.fillStyle = color;
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    ctx.lineTo(Math.cos((i * 2 * Math.PI) / 5) * size, Math.sin((i * 2 * Math.PI) / 5) * size);
+                    ctx.lineTo(Math.cos(((i * 2 + 1) * Math.PI) / 5) * size / 2, Math.sin(((i * 2 + 1) * Math.PI) / 5) * size / 2);
+                }
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        let confettiArray = [];
+        let followers = 11;
+        let totalFollowers = 20;
+        let width = followers / totalFollowers * 100;
+
+        progress.style.width = width + '%';
+        follwerDisplay.innerHTML = followers + ' / ' + totalFollowers;
+
+        update();
+
+        function startWebsocket() {
+            websocket = new WebSocket('ws://localhost:8080/ws');
+            websocket.onopen = function () {
+                console.log('Connected to server');
+            }
+
+            websocket.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                if (data.overlay !== 'follower') return
+                switch (data.event) {
+                    case 'follow':
+                        newFollower(data.sender, data.color, data.message, data.emotes);
+                        break;
+                    case 'goal':
+                        followers = data.followers;
+                        totalFollowers = data.goal;
+                        break;
+                }
+            }
+        }
+
+        startWebsocket();
+
+        document.getElementById('container').classList.remove('FadeIn');
+        document.getElementById('container-bg').classList.remove('FadeIn');
+        document.getElementById('container').classList.add('FadeOut');
+        document.getElementById('container-bg').classList.add('FadeOut');
+
+        function newFollower(username, color, profilePic) {
+            let img = new Image();
+            img.src = profilePic;
+            img.onload = () => {
+                confetti();
+                displayFollwerCount();
+                setTimeout(() => {
+                    followers++;
+                }, 1000)
+                currentUser = {
+                    username,
+                    color,
+                    img,
+                    time: new Date(),
+                    maxLife: 5000
+                };
+            }
+        }
+
+        function displayFollwerCount() {
+            document.getElementById('container').classList.remove('FadeOut');
+            document.getElementById('container-bg').classList.remove('FadeOut');
+            document.getElementById('container').classList.add('FadeIn');
+            document.getElementById('container-bg').classList.add('FadeIn');
+            setTimeout(() => {
+                document.getElementById('container').classList.remove('FadeIn');
+                document.getElementById('container-bg').classList.remove('FadeIn');
+                document.getElementById('container').classList.add('FadeOut');
+                document.getElementById('container-bg').classList.add('FadeOut');
+            }, 10000);
+        }
+
+        function confetti(amount = 1000) {
+            for (let i = 0; i < amount; i++) {
+                //explode out from the center in a random direction
+                let angle = getRandomAngle();
+                let speed = Math.random() * 10 + 1;
+                let size = Math.random() * 5 + 5;
+                let color = 'hsl(' + Math.random() * 360 + ', 75%, 50%)';
+                let shape = Object.keys(shapes)[Math.floor(Math.random() * (Object.keys(shapes).length))];
+                let isLeftSpinning = Math.random() > 0.5;
+                confettiArray.push({
+                    x: window.innerWidth * 0.25,
+                    y: window.innerHeight * 0.33,
+                    rotation: 0,
+                    angle,
+                    speed,
+                    size,
+                    color,
+                    shape,
+                    isLeftSpinning
+                });
+
+                confettiArray.push({
+                    x: window.innerWidth * 0.5,
+                    y: window.innerHeight * 0.25,
+                    rotation: 0,
+                    angle,
+                    speed,
+                    size,
+                    color,
+                    shape,
+                    isLeftSpinning
+                });
+
+                confettiArray.push({
+                    x: window.innerWidth * 0.75,
+                    y: window.innerHeight * 0.33,
+                    rotation: 0,
+                    angle,
+                    speed,
+                    size,
+                    color,
+                    shape,
+                    isLeftSpinning
+                });
+            }
+        }
+
+        function getRandomAngle() {
+            //random angle between 0 and 2PI
+            //slightly favoring the top half of the circle
+            return Math.random() * Math.PI * 2 + Math.PI / 4;
+        }
+
+        function animate(delta) {
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            //write delta to screen
+
+            for (let i = 0; i < confettiArray.length; i++) {
+                let confetto = confettiArray[i];
+                //move confetti in directin of angle
+                confetto.x += Math.cos(confetto.angle) * confetto.speed * delta * 100;
+                confetto.y += Math.sin(confetto.angle) * confetto.speed * delta * 170;
+                //slow down the confetti
+                confetto.speed *= 0.99;
+                //gravity
+                confetto.y += 981 * delta;
+                //delete confetti if it gets too slow
+                if (confetto.speed < 0.5) {
+                    confettiArray.splice(i, 1);
+                    i--;
+                }
+                //delete confetti if it goes off screen
+                if (confetto && (confetto.x < 0 || confetto.x > window.innerWidth || confetto.y < 0 || confetto.y > window.innerHeight)) {
+                    confettiArray.splice(i, 1);
+                    i--;
+                }
+
+                confetto.rotation += confetto.isLeftSpinning ? -confetto.angle * 0.7 * delta : confetto.angle * 0.7 * delta;
+
+                //draw confetti
+                shapes[confetto.shape](confetto.x, confetto.y, confetto.size, confetto.color, confetto.rotation);
+            }
+
+            if (!currentUser) return;
+            let life = new Date() - currentUser.time;
+            if (life > currentUser.maxLife) {
+                currentUser = null;
+                return;
+            }
+            let deltaLife = life / currentUser.maxLife;
+            let x = window.innerWidth * 0.5 - 500;
+            let y = window.innerHeight * 0.5;
+            let size = 100;
+            let color = currentUser.color;
+
+            ctx.save();
+            //rotate profile for the first 10% of the lifetime
+            let angle = 0;
+            if (deltaLife < 0.1) {
+                ctx.globalAlpha = deltaLife * 10;
+                angle = deltaLife * Math.PI * 2 * 10;
+                //lerp x to center
+                x = x + (window.innerWidth * 0.5 - x) * deltaLife * 10;
+            } else if (deltaLife > 0.9) {
+                ctx.globalAlpha = 1 - (deltaLife - 0.9) * 10;
+                x = window.innerWidth * 0.5;
+            } else {
+                ctx.globalAlpha = 1;
+                x = window.innerWidth * 0.5;
+            }
+            //set font
+            ctx.font = '40px Poppins';
+            let message = ' just followed!';
+            let displayText = currentUser.username + message;
+            let usernameWidth = ctx.measureText(currentUser.username).width;
+            let messageWidth = ctx.measureText(message).width;
+            let displayWidth = ctx.measureText(displayText).width;
+            ctx.fillStyle = color;
+            ctx.font = 'bold 40px Poppins';
+            ctx.fillText(currentUser.username, x - displayWidth * 0.5, y - size - 50);
+            ctx.fillStyle = 'black';
+            ctx.font = '40px Poppins';
+            ctx.fillText(message, x, y - size - 50);
+
+
+            //draw circle
+            shapes.circle(x, y, size + 10, color, 0);
+
+            //draw profile pic in circle
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.drawImage(currentUser.img, -size, -size, size * 2, size * 2);
+            ctx.restore();
+        }
+
+        function update() {
+            let currentTime = new Date();
+            let delta = (currentTime - startTime) / 1000;
+            //lerp the width
+            width = width + (followers / totalFollowers * 100 - width) * 0.05;
+            progress.style.width = width + '%';
+            follwerDisplay.innerHTML = followers + ' / ' + totalFollowers;
+
+            ctx.canvas.width = window.innerWidth;
+            ctx.canvas.height = window.innerHeight;
+            animate(delta);
+            startTime = currentTime;
+            requestAnimationFrame(update);
+        }
+    </script>
+</body>
+
+</html>
