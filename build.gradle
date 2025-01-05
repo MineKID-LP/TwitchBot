@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.gradleup.shadow' version '9.0.0-beta4'
 }
 
 group = 'de.stylabs'
@@ -19,9 +20,19 @@ dependencies {
     implementation("org.apache.tomcat.embed:tomcat-embed-core:11.0.2")
     implementation("org.apache.tomcat.embed:tomcat-embed-websocket:11.0.2")
     implementation("org.apache.tomcat.embed:tomcat-embed-jasper:11.0.2")
+    implementation("javazoom:jlayer:1.0.1")
 
 }
 
 test {
     useJUnitPlatform()
+}
+
+//make manifest
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'de.stylabs.twitchbot.TwitchBot'
+        )
+    }
 }

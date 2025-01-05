@@ -2,19 +2,19 @@ package de.stylabs.twitchbot;
 
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
+import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.chat.events.channel.FollowEvent;
-import com.github.twitch4j.helix.domain.ChatUserColor;
 import com.github.twitch4j.pubsub.domain.CreatorGoal;
 import com.github.twitch4j.pubsub.events.CreatorGoalEvent;
-import de.stylabs.twitchbot.commands.Help;
+import de.stylabs.twitchbot.ai.AiBridge;
+import de.stylabs.twitchbot.commands.util.JoinCommand;
 import de.stylabs.twitchbot.overlay.ChatOverlay;
 import de.stylabs.twitchbot.overlay.FollowerOverlay;
 import de.stylabs.twitchbot.overlay.WebServer;
 import de.stylabs.twitchbot.commands.util.CommandManager;
 import de.stylabs.twitchbot.commands.util.CommandSender;
-import de.stylabs.twitchbot.util.SecretsManager;
-import de.stylabs.twitchbot.util.TwitchCredential;
+import de.stylabs.twitchbot.util.*;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -22,10 +22,11 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Logger;
+
+import static de.stylabs.twitchbot.util.ThreadManager.startThread;
 
 public class TwitchBot {
     private static final Logger LOGGER = Logger.getLogger(TwitchBot.class.getName());
@@ -35,16 +36,17 @@ public class TwitchBot {
     private static TwitchCredential botCredential;
     private static TwitchCredential userCredential;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // Create an OAuth credential
         SecretsManager.load();
+        Config.loadConfig();
+
+        if(Config.isAIEnabled()) LOGGER.info("AI is enabled");
 
         botCredential = new TwitchCredential("bot");
         userCredential = new TwitchCredential("user");
 
-        new Thread(() -> {
-            WebServer.start();
-        }).start();
+        startThread(WebServer::start);
 
         registerCommands();
         registerOverlays();
@@ -71,6 +73,11 @@ public class TwitchBot {
             CommandSender sender = new CommandSender(username, event.getPermissions());
             if(!message.startsWith("!")) {
                 ChatOverlay.onChatMessage(sender, message, event.getMessageEvent().getUserChatColor(), event.getMessageEvent().getTagValue("emotes").orElse(""));
+
+                if(Config.isAIEnabled()) {
+                    AiBridge.onChatMessage(sender, message);
+                }
+
                 return;
             }
 
@@ -84,8 +91,7 @@ public class TwitchBot {
         twitchClient.getEventManager().onEvent(FollowEvent.class, event -> {
             String id = event.getUser().getId();
             String name = event.getUser().getName();
-            List<ChatUserColor> colorList = twitchClient.getHelix().getUserChatColor(getChannelID(), Collections.singletonList(id)).execute().getData();
-            String userColor = colorList.getFirst().getColor();
+            String userColor = RandomShit.getRandomChatColor();
             String profilePictureUrl = twitchClient.getHelix().getUsers(null, Collections.singletonList(id), null).execute().getUsers().getFirst().getProfileImageUrl();
             FollowerOverlay.onFollow(name, userColor, profilePictureUrl);
         });
@@ -97,10 +103,23 @@ public class TwitchBot {
             }
         });
 
+//        twitchClient.getEventManager().onEvent(RaidEvent.class, event -> {
+//            String username = event.getRaider().getName();
+//            int viewers = event.getViewers();
+//            ChatOverlay.onRaid(username, viewers);
+//        });
+
         // Log connection success
         LOGGER.info("Twitch bot is running and connected to chat!");
 
-        // Add more listeners and functionality below as needed
+        // Register shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            LOGGER.info("Shutting down Twitch bot..");
+            twitchClient.getChat().leaveChannel(getChannelName());
+            twitchClient.close();
+            ThreadManager.stopThreads();
+            scheduler.shutdown();
+        }));
     }
 
     private static void registerOverlays() {
@@ -108,7 +127,7 @@ public class TwitchBot {
     }
 
     private static void registerCommands() {
-        commandManager.registerCommand("help", new Help());
+        commandManager.registerCommand("join", new JoinCommand());
     }
 
     public static TwitchClient getClient() {
@@ -147,5 +166,9 @@ public class TwitchBot {
 
     public static ScheduledExecutorService getExecutor() {
         return scheduler;
+    }
+
+    public static TwitchChat getChat() {
+        return twitchClient.getChat();
     }
 }

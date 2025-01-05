@@ -13,18 +13,18 @@ public class WebSocketServer {
 
     @OnOpen
     public void onOpen(Session session) {
-        System.out.println("WebSocket opened: " + session.getId());
+        TwitchBot.getLogger().info("WebSocket opened: " + session.getId());
         sessions.put(session.getId(), session);
     }
 
     @OnMessage
     public void onMessage(String message, Session session) {
-        System.out.println("Message from " + session.getId() + ": " + message);
+        TwitchBot.getLogger().info("Message from " + session.getId() + ": " + message);
     }
 
     @OnClose
     public void onClose(Session session) {
-        System.out.println("WebSocket closed: " + session.getId());
+        TwitchBot.getLogger().info("WebSocket closed: " + session.getId());
         sessions.remove(session.getId());
     }
 

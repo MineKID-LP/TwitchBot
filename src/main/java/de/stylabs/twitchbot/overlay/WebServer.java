@@ -13,7 +13,7 @@ public class WebServer {
     private static Tomcat tomcat;
     private static final File overlayDirectory = new File("overlays");
     public static void start() {
-        unpack();
+        //unpack();
         tomcat = new Tomcat();
         tomcat.setPort(8080);
         tomcat.getConnector(); // Trigger default connector creation
@@ -36,7 +36,7 @@ public class WebServer {
         // and write them to the overlays directory
         String resourcePath = Objects.requireNonNull(WebServer.class.getClassLoader().getResource("overlays")).getPath();
         try {
-            Files.walk(new File(resourcePath).toPath()).forEach(path -> {
+            Files.walk(new File(resourcePath.replace("file:", "")).toPath()).forEach(path -> {
                 File file = path.toFile();
                 // create directories and copy files
                 if (file.isDirectory()) {

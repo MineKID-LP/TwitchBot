@@ -32,7 +32,7 @@ public class TwitchCredential {
         load();
         expiresAt = new Date().getTime() + expiresIn * 1000;
         TwitchBot.getLogger().info((expiresAt > new Date().getTime()) + ", " + expiresAt + ", " + new Date().getTime());
-        if (expiresAt > new Date().getTime()) return;
+        //if (expiresAt > new Date().getTime()) return;
         TwitchBot.getLogger().info("Refreshing token..");
         // Refresh the token
         HttpClient client = HttpClient.newHttpClient();
